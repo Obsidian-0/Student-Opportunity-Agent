@@ -1,0 +1,28 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Environment Variables
+.env
+
+# Flask
+instance/
+*.sqlite3
+*.db
+models/
+# VS Code
+.vscode/
+
+# Frontend
+node_modules/
+dist/
+build/
+
+# OS Files
+.DS_Store
+Thumbs.db
+backend/config.py
+backend/tempCodeRunnerFile.py
