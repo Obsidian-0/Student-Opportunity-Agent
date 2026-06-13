@@ -1,6 +1,8 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import time
 
 
@@ -21,15 +23,19 @@ def get_jobs(skills, opp_type="internship"):
 
     driver = get_driver()
     driver.get(url)
-    time.sleep(3)
+
+    wait = WebDriverWait(driver, 10)
+    try:
+        wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".individual_internship")))
+    except:
+        driver.get("https://internshala.com/internships/computer-science-internship")
+        try:
+            wait.until(EC.presence_of_element_located((By.CSS_SELECTOR, ".individual_internship")))
+        except:
+            driver.quit()
+            return []
 
     cards = driver.find_elements(By.CSS_SELECTOR, ".individual_internship")
-
-    if not cards:
-        driver.get("https://internshala.com/internships/computer-science-internship")
-        time.sleep(3)
-        cards = driver.find_elements(By.CSS_SELECTOR, ".individual_internship")
-
     jobs = []
 
     for i, card in enumerate(cards[:8]):
@@ -44,7 +50,7 @@ def get_jobs(skills, opp_type="internship"):
             company = "Company"
 
         try:
-            location = card.find_element(By.CSS_SELECTOR, ".location_link").text.strip()
+            location = card.find_element(By.CSS_SELECTOR, "#location_names span").text.strip()
         except:
             location = "Remote"
 
@@ -54,23 +60,41 @@ def get_jobs(skills, opp_type="internship"):
             stipend = "See listing"
 
         try:
-            link = card.find_element(By.CSS_SELECTOR, "a.view_detail_button")
-            href = link.get_attribute("href")
-            apply_link = "https://internshala.com" + href if href.startswith("/") else href
+            duration = card.find_element(By.CSS_SELECTOR, ".other_detail_item .item_body").text.strip()
+        except:
+            duration = ""
+
+        try:
+            skills_els = card.find_elements(By.CSS_SELECTOR, ".round_tabs")
+            required_skills = ", ".join([s.text.strip() for s in skills_els]) if skills_els else ""
+        except:
+            required_skills = ""
+
+        try:
+            apply_a = card.find_element(By.CSS_SELECTOR, "a.top_apply_now_cta, a.apply_now_button")
+            href = apply_a.get_attribute("href")
+            apply_link = href if href.startswith("http") else "https://internshala.com" + href
         except:
             apply_link = "https://internshala.com/internships"
 
+        try:
+            posted = card.find_element(By.CSS_SELECTOR, ".status-success").text.strip()
+        except:
+            posted = "Recently"
+
         jobs.append({
-            "id":          f"internshala_{i}",
-            "title":       title,
-            "company":     company,
-            "location":    location,
-            "platform":    "Internshala",
-            "type":        "Internship",
-            "stipend":     stipend,
-            "posted":      "Recently",
-            "apply_link":  apply_link,
-            "description": f"{title} at {company}",
+            "id":             f"internshala_{i}",
+            "title":          title,
+            "company":        company,
+            "location":       location,
+            "platform":       "Internshala",
+            "type":           "Internship",
+            "stipend":        stipend,
+            "duration":       duration,
+            "posted":         posted,
+            "apply_link":     apply_link,
+            "description":    f"{title} at {company} — {location}",
+            "skills_needed":  required_skills,
         })
 
     driver.quit()
