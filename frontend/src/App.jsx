@@ -371,77 +371,334 @@ function MatchStep({profile,onNext,onBack}) {
 }
 
 
-function ApplyStep({profile,onBack}) {
-  const [current,setCurrent]=useState(0);
-  const [coverLetter,setCoverLetter]=useState("");
-  const [submitted,setSubmitted]=useState([]);
-  const [saving,setSaving]=useState(false);
-  const [error,setError]=useState(null);
+function ApplyStep({ profile, onBack }) {
+  const jobs = profile.shortlisted || [];
 
-  const jobs=profile.shortlisted||[];
-  const job=jobs[current];
+  const [current, setCurrent] = useState(0);
+  const [sessionValid, setSessionValid] = useState(null);
+  const [loginEmail, setLoginEmail] = useState("");
+  const [loginPassword, setLoginPassword] = useState("");
+  const [loginLoading, setLoginLoading] = useState(false);
+  const [loginError, setLoginError] = useState(null);
+  const [applyLoading, setApplyLoading] = useState(false);
+  const [applyError, setApplyError] = useState(null);
+  const [preview, setPreview] = useState(null);
+  const [confirmed, setConfirmed] = useState(false);
+  const [submitted, setSubmitted] = useState([]);
 
-  const submitApplication=async()=>{
-    setSaving(true);setError(null);
+  const job = jobs[current];
+
+  // Component load hone pe session check karo
+  useEffect(() => {
+    checkSession();
+  }, []);
+
+  const checkSession = async () => {
     try {
-      const res=await fetch(`${BASE}/api/apply`,{  
-        method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({
-          student_id:1,
-          job_title:job.title,
-          company:job.company,
-          platform:job.platform,
-          match_score:job.match||0,
-        })
-      });
-      const data=await res.json();
-      if(!data.success)throw new Error("Failed");
-      setSubmitted(s=>[...s,current]);
-      if(current<jobs.length-1){setCurrent(c=>c+1);setCoverLetter("");}
-    } catch{setError("Application failed. Backend check karo.");}
-    finally{setSaving(false);}
+      const res = await fetch(`${BASE}/api/internshala/session?student_id=1`);
+      const data = await res.json();
+      setSessionValid(data.logged_in);
+    } catch {
+      setSessionValid(false);
+    }
   };
 
-  if(submitted.length===jobs.length&&jobs.length>0){
+  // Internshala login
+  const handleLogin = async () => {
+    if (!loginEmail.trim() || !loginPassword.trim()) return;
+    setLoginLoading(true);
+    setLoginError(null);
+    try {
+      const res = await fetch(`${BASE}/api/internshala/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: loginEmail,
+          password: loginPassword,
+          student_id: 1,
+        }),
+      });
+      const data = await res.json();
+      if (data.success) {
+        setSessionValid(true);
+      } else {
+        setLoginError(data.message || "Login fail ho gaya");
+      }
+    } catch {
+      setLoginError("Backend se connect nahi ho saka");
+    } finally {
+      setLoginLoading(false);
+    }
+  };
+
+  // Apply preview lo
+  const handlePreview = async () => {
+    setApplyLoading(true);
+    setApplyError(null);
+    setPreview(null);
+    try {
+      const res = await fetch(`${BASE}/api/internshala/apply`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          student_id: 1,
+          apply_link: job.apply_link,
+          job_title: job.title,
+          company: job.company,
+          confirmed: false,
+        }),
+      });
+      const data = await res.json();
+
+      // Session expire ho gaya
+      if (data.session_expired) {
+        setSessionValid(false);
+        return;
+      }
+
+      if (data.success) {
+        setPreview(data.preview);
+      } else {
+        setApplyError(data.message);
+      }
+    } catch {
+      setApplyError("Kuch ghalat hua — dobara try karo");
+    } finally {
+      setApplyLoading(false);
+    }
+  };
+
+  // Final apply
+  const handleConfirmApply = async () => {
+    setApplyLoading(true);
+    setApplyError(null);
+    try {
+      const res = await fetch(`${BASE}/api/internshala/apply`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          student_id: 1,
+          apply_link: job.apply_link,
+          job_title: job.title,
+          company: job.company,
+          confirmed: true,
+        }),
+      });
+      const data = await res.json();
+
+      if (data.session_expired) {
+        setSessionValid(false);
+        return;
+      }
+
+      if (data.success) {
+        setSubmitted((s) => [...s, current]);
+        setPreview(null);
+        setConfirmed(false);
+        if (current < jobs.length - 1) {
+          setCurrent((c) => c + 1);
+        }
+      } else {
+        setApplyError(data.message);
+      }
+    } catch {
+      setApplyError("Apply fail ho gaya — dobara try karo");
+    } finally {
+      setApplyLoading(false);
+    }
+  };
+
+  // Sab submit ho gaye
+  if (submitted.length === jobs.length && jobs.length > 0) {
     return (
-      <div style={{animation:"fadeUp 0.4s ease",textAlign:"center",padding:"40px 20px"}}>
-        <div style={{fontSize:32,marginBottom:12}}>🎉</div>
-        <h2 style={{fontSize:24,fontWeight:800,color:C.text,marginBottom:6,fontFamily:"'Space Mono',monospace"}}>
-          All Applications Submitted!
+      <div style={{ animation: "fadeUp 0.4s ease", textAlign: "center", padding: "40px 20px" }}>
+        <div style={{ fontSize: 40, marginBottom: 12 }}>🎉</div>
+        <h2 style={{ fontSize: 24, fontWeight: 800, color: C.text, marginBottom: 6, fontFamily: "'Space Mono',monospace" }}>
+          Sab Applications Submit Ho Gayi!
         </h2>
-        <p style={{color:C.muted,fontSize:14}}>Great job applying to {jobs.length} opportunities. Fingers crossed! 🤞</p>
-        <button onClick={onBack} style={{marginTop:28,padding:"12px 24px",borderRadius:12,
-          border:`1px solid ${C.border}`,background:"transparent",color:C.muted,
-          fontSize:14,cursor:"pointer",fontFamily:"inherit"}}>
+        <p style={{ color: C.muted, fontSize: 14 }}>
+          {jobs.length} jobs pe apply kar diya — fingers crossed! 🤞
+        </p>
+        <button
+          onClick={onBack}
+          style={{ marginTop: 28, padding: "12px 24px", borderRadius: 12,
+            border: `1px solid ${C.border}`, background: "transparent",
+            color: C.muted, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>
           ← Back to Matches
         </button>
       </div>
     );
   }
 
+  // Session check ho raha hai
+  if (sessionValid === null) {
+    return (
+      <div style={{ textAlign: "center", padding: "60px 0", color: C.muted }}>
+        <Spinner />
+        <div style={{ marginTop: 12, fontSize: 13 }}>Session check ho raha hai...</div>
+      </div>
+    );
+  }
+
+  // Session nahi hai — login form dikhao
+  if (!sessionValid) {
+    return (
+      <div style={{ animation: "fadeUp 0.4s ease" }}>
+        <BackBtn onClick={onBack} />
+        <h2 style={{ fontSize: 24, fontWeight: 800, color: C.text, marginBottom: 6, fontFamily: "'Space Mono',monospace" }}>
+          Internshala Login
+        </h2>
+        <p style={{ color: C.muted, fontSize: 14, marginBottom: 24 }}>
+          Apply karne ke liye pehle Internshala account se login karo.
+        </p>
+
+        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 700, color: C.muted,
+              letterSpacing: "1px", textTransform: "uppercase", display: "block", marginBottom: 6 }}>
+              Email
+            </label>
+            <input
+              type="email"
+              value={loginEmail}
+              onChange={(e) => setLoginEmail(e.target.value)}
+              placeholder="internshala@email.com"
+              style={{ width: "100%", background: C.surface, border: `1px solid ${C.border}`,
+                borderRadius: 10, padding: "12px 16px", color: C.text, fontSize: 14,
+                outline: "none", fontFamily: "inherit", boxSizing: "border-box" }}
+              onFocus={(e) => (e.target.style.border = `1px solid ${C.accent}`)}
+              onBlur={(e) => (e.target.style.border = `1px solid ${C.border}`)}
+            />
+          </div>
+
+          <div>
+            <label style={{ fontSize: 11, fontWeight: 700, color: C.muted,
+              letterSpacing: "1px", textTransform: "uppercase", display: "block", marginBottom: 6 }}>
+              Password
+            </label>
+            <input
+              type="password"
+              value={loginPassword}
+              onChange={(e) => setLoginPassword(e.target.value)}
+              placeholder="••••••••"
+              style={{ width: "100%", background: C.surface, border: `1px solid ${C.border}`,
+                borderRadius: 10, padding: "12px 16px", color: C.text, fontSize: 14,
+                outline: "none", fontFamily: "inherit", boxSizing: "border-box" }}
+              onFocus={(e) => (e.target.style.border = `1px solid ${C.accent}`)}
+              onBlur={(e) => (e.target.style.border = `1px solid ${C.border}`)}
+            />
+          </div>
+        </div>
+
+        {loginError && (
+          <div style={{ color: C.red, fontSize: 13, marginTop: 12 }}>⚠ {loginError}</div>
+        )}
+
+        <button
+          onClick={handleLogin}
+          disabled={loginLoading || !loginEmail.trim() || !loginPassword.trim()}
+          style={{ marginTop: 20, width: "100%", padding: "14px", borderRadius: 12, border: "none",
+            background: !loginLoading && loginEmail && loginPassword
+              ? `linear-gradient(135deg,${C.accent},${C.cyan})` : C.surface,
+            color: !loginLoading && loginEmail && loginPassword ? "#fff" : C.muted,
+            fontSize: 15, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+          {loginLoading ? <><Spinner /> Logging in...</> : "Login to Internshala →"}
+        </button>
+      </div>
+    );
+  }
+
+  // Logged in — apply flow
   return (
-    <div style={{animation:"fadeUp 0.4s ease"}}>
-      <BackBtn onClick={onBack}/>
-      <h2 style={{fontSize:26,fontWeight:800,color:C.text,marginBottom:6,fontFamily:"'Space Mono',monospace"}}>
-        Applying to {job.title} at {job.company}
+    <div style={{ animation: "fadeUp 0.4s ease" }}>
+      <BackBtn onClick={onBack} />
+
+      {/* Progress */}
+      <div style={{ fontSize: 12, color: C.muted, marginBottom: 6 }}>
+        Job {current + 1} of {jobs.length}
+      </div>
+
+      <h2 style={{ fontSize: 22, fontWeight: 800, color: C.text, marginBottom: 4, fontFamily: "'Space Mono',monospace" }}>
+        {job.title}
       </h2>
-      <p style={{color:C.muted,fontSize:14,marginBottom:20}}>Write a personalized cover letter to boost your chances.</p>
-      <textarea value={coverLetter} onChange={e=>setCoverLetter(e.target.value)}
-        placeholder="I am excited to apply for this role because..."
-        rows={8} style={{width:"100%",background:C.surface,border:`1px solid ${C.border}`,borderRadius:12,
-          padding:"16px",color:C.text,fontSize:14,outline:"none",fontFamily:"inherit",resize:"vertical",boxSizing:"border-box",lineHeight:1.7}}
-        onFocus={e=>e.target.style.border=`1px solid ${C.accent}`}
-        onBlur={e=>e.target.style.border=`1px solid ${C.border}`}/>
-      {error&&<div style={{color:C.red,fontSize:13,marginBottom:12}}>⚠ {error}</div>}
-      <button onClick={submitApplication} disabled={saving||!coverLetter.trim()}
-        style={{marginTop:28,width:"100%",padding:"14px",borderRadius:12,border:"none",
-          background:!saving&&coverLetter.trim()?`linear-gradient(135deg,${C.accent},${C.cyan})`:C.surface,
-          color:!saving&&coverLetter.trim()?"#fff":C.muted,fontSize:15,fontWeight:700,
-          cursor:!saving&&coverLetter.trim()?"pointer":"not-allowed",fontFamily:"inherit",
-          boxShadow:!saving&&coverLetter.trim()?
-            `0 4px 24px ${C.accent}40`: "none",transition:"all 0.2s"}}>
-        {saving?<><Spinner/> Submitting...</>:"Submit Application →"}
-      </button>
+      <p style={{ color: C.muted, fontSize: 14, marginBottom: 20 }}>
+        {job.company} · {job.location} · {job.platform}
+      </p>
+
+      {/* Job details card */}
+      <div style={{ background: C.card, border: `1px solid ${C.border}`, borderRadius: 14,
+        padding: 16, marginBottom: 20 }}>
+        <div style={{ display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 10 }}>
+          <Tag color={C.green}>{job.stipend || "See listing"}</Tag>
+          <Tag color={C.cyan}>{job.type}</Tag>
+          {job.match && <Tag color={C.accent}>{job.match}% Match</Tag>}
+        </div>
+        <p style={{ fontSize: 13, color: C.muted, lineHeight: 1.6 }}>{job.description}</p>
+      </div>
+
+      {/* Preview section */}
+      {preview && (
+        <div style={{ background: C.surface, border: `1px solid ${C.amber}40`,
+          borderRadius: 12, padding: 16, marginBottom: 16 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: C.amber,
+            letterSpacing: "1px", textTransform: "uppercase", marginBottom: 8 }}>
+            Application Preview
+          </div>
+          <p style={{ fontSize: 12, color: C.muted, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>
+            {preview}
+          </p>
+        </div>
+      )}
+
+      {applyError && (
+        <div style={{ color: C.red, fontSize: 13, marginBottom: 12 }}>⚠ {applyError}</div>
+      )}
+
+      {/* Buttons */}
+      {!preview ? (
+        <button
+          onClick={handlePreview}
+          disabled={applyLoading}
+          style={{ width: "100%", padding: "14px", borderRadius: 12, border: "none",
+            background: !applyLoading ? `linear-gradient(135deg,${C.accent},${C.cyan})` : C.surface,
+            color: !applyLoading ? "#fff" : C.muted, fontSize: 15, fontWeight: 700,
+            cursor: "pointer", fontFamily: "inherit",
+            display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
+          {applyLoading ? <><Spinner /> Opening Application...</> : "Preview Application →"}
+        </button>
+      ) : (
+        <div style={{ display: "flex", gap: 10 }}>
+          <button
+            onClick={() => { setPreview(null); setApplyError(null); }}
+            style={{ flex: 1, padding: "12px", borderRadius: 12,
+              border: `1px solid ${C.border}`, background: "transparent",
+              color: C.muted, fontSize: 14, cursor: "pointer", fontFamily: "inherit" }}>
+            ← Cancel
+          </button>
+          <button
+            onClick={handleConfirmApply}
+            disabled={applyLoading}
+            style={{ flex: 2, padding: "12px", borderRadius: 12, border: "none",
+              background: !applyLoading ? `linear-gradient(135deg,${C.green},${C.cyan})` : C.surface,
+              color: !applyLoading ? "#fff" : C.muted, fontSize: 14, fontWeight: 700,
+              cursor: "pointer", fontFamily: "inherit",
+              display: "flex", alignItems: "center", justifyContent: "center", gap: 8 }}>
+            {applyLoading ? <><Spinner /> Applying...</> : "✓ Confirm & Apply"}
+          </button>
+        </div>
+      )}
+
+      {/* Skip button */}
+      {!applyLoading && current < jobs.length - 1 && (
+        <button
+          onClick={() => { setCurrent((c) => c + 1); setPreview(null); setApplyError(null); }}
+          style={{ marginTop: 12, width: "100%", padding: "10px", borderRadius: 12,
+            border: `1px solid ${C.border}`, background: "transparent",
+            color: C.muted, fontSize: 13, cursor: "pointer", fontFamily: "inherit" }}>
+          Skip this job →
+        </button>
+      )}
     </div>
   );
 }
