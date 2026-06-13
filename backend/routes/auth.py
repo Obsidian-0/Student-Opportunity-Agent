@@ -1,59 +1,43 @@
-# routes/auth.py
 from flask import Blueprint, request, jsonify
-from models.user import Student
+from models.db import get_connection
 
 auth = Blueprint("auth", __name__)
 
-# ── Register ───────────────────────────────────────────────
-@auth.route("/api/register", methods=["POST"])
-def register():
+
+@auth.route("/api/student/create", methods=["POST"])
+def create_student():
     data = request.json
+    name     = data.get("name", "")
+    degree   = data.get("degree", "")
+    semester = data.get("sem", "")
+    opp_type = data.get("type", "")
 
-    # Validation
-    required = ["name", "email", "password"]
-    for field in required:
-        if not data.get(field):
-            return jsonify({"error": f"{field} is required"}), 400
+    if not name:
+        return jsonify({"error": "Name required"}), 400
 
-    result = Student.create(
-        name     = data["name"],
-        email    = data["email"],
-        password = data["password"],
-        degree   = data.get("degree", "CS"),
-        semester = data.get("semester", "4th"),
-        opp_type = data.get("opp_type", "Internship")
-    )
-
-    if result["success"]:
-        return jsonify(result), 201
-    return jsonify(result), 400
-
-
-# ── Login ──────────────────────────────────────────────────
-@auth.route("/api/login", methods=["POST"])
-def login():
-    data = request.json
-
-    if not data.get("email") or not data.get("password"):
-        return jsonify({"error": "Email and password required"}), 400
-
-    result = Student.login(data["email"], data["password"])
-
-    if result["success"]:
-        # Password hide karo response se
-        result["student"].pop("password", None)
-        return jsonify(result), 200
-
-    return jsonify(result), 401
+    conn = get_connection()
+    try:
+        cursor = conn.execute(
+            "INSERT INTO students (name, degree, semester, opp_type) VALUES (?, ?, ?, ?)",
+            (name, degree, semester, opp_type)
+        )
+        conn.commit()
+        student_id = cursor.lastrowid
+        return jsonify({"success": True, "student_id": student_id}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+    finally:
+        conn.close()
 
 
-# ── Get Profile ────────────────────────────────────────────
-@auth.route("/api/profile/<int:student_id>", methods=["GET"])
-def get_profile(student_id):
-    student = Student.get_by_id(student_id)
+@auth.route("/api/student/<int:student_id>", methods=["GET"])
+def get_student(student_id):
+    conn = get_connection()
+    row = conn.execute(
+        "SELECT * FROM students WHERE id = ?", (student_id,)
+    ).fetchone()
+    conn.close()
 
-    if not student:
+    if not row:
         return jsonify({"error": "Student not found"}), 404
-
-    student.pop("password", None)
-    return jsonify({"success": True, "student": student})
+    return jsonify(dict(row)), 200

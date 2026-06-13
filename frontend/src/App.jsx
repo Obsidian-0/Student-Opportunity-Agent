@@ -114,7 +114,10 @@ function ProfileStep({onNext}) {
           ))}
         </div>
       </div>
-      <button onClick={()=>name.trim()&&onNext({name,degree,sem,type})} disabled={!name.trim()}
+      <button onClick={async () => {
+  if (!name.trim()) return;
+  const res = await fetch(`${BASE}/api/student/create`, {
+    method: "POST", headers: { "Content-Type": "application/json" },  body: JSON.stringify({ name, degree, sem, type }) });const data = await res.json();if (data.student_id) { onNext({ name, degree, sem, type, student_id: data.student_id });}}} disabled={!name.trim()}
         style={{marginTop:28,width:"100%",padding:"14px",borderRadius:12,border:"none",
           background:name.trim()?`linear-gradient(135deg,${C.accent},${C.cyan})`:C.surface,
           color:name.trim()?"#fff":C.muted,fontSize:15,fontWeight:700,
@@ -145,7 +148,7 @@ function SkillStep({profile,onNext,onBack}) {
     try {
       const res=await fetch(`${BASE}/api/skills/extract`,{
         method:"POST",headers:{"Content-Type":"application/json"},
-        body:JSON.stringify({text:input,student_id:1})
+        body:JSON.stringify({text:input,student_id:profile.student_id})
       });
       const data=await res.json();
       if(data.error)throw new Error(data.error);
@@ -415,7 +418,7 @@ function ApplyStep({ profile, onBack }) {
         body: JSON.stringify({
           email: loginEmail,
           password: loginPassword,
-          student_id: 1,
+          student_id: profile.student_id,
         }),
       });
       const data = await res.json();
@@ -441,7 +444,7 @@ function ApplyStep({ profile, onBack }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          student_id: 1,
+          student_id: profile.student_id,
           apply_link: job.apply_link,
           job_title: job.title,
           company: job.company,
@@ -477,7 +480,7 @@ function ApplyStep({ profile, onBack }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          student_id: 1,
+          student_id: profile.student_id,
           apply_link: job.apply_link,
           job_title: job.title,
           company: job.company,
