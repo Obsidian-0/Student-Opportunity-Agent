@@ -45,7 +45,7 @@ def internshala_login(email, password):
         return {"success": False, "message": str(e)}
 
 
-def apply_with_session(cookies, apply_link, cv_path=None):
+def apply_with_session(cookies, apply_link):
     driver = get_driver(headless=False)
 
     
@@ -78,17 +78,7 @@ def apply_with_session(cookies, apply_link, cv_path=None):
         except:
             pass
 
-        if cv_path:
-            try:
-                upload_input = driver.find_element(By.CSS_SELECTOR, "input[type='file']")
-                upload_input.send_keys(cv_path)
-                time.sleep(2)
-            except:
-                driver.quit()
-                return {"success": False, "message": "CV upload field nahi mila"}
-
-           # CV check karo — agar uploaded nahi toh message do
-            
+       
 
         page_text = driver.find_element(By.TAG_NAME, "body").text[:500]
         driver.quit()
@@ -120,7 +110,7 @@ def confirm_apply(cookies, apply_link):
         driver.get(apply_link)
         time.sleep(3)
 
-        apply_btn = driver.find_element(By.CSS_SELECTOR, "#apply_button, .apply_button, [id*='apply']")
+        apply_btn = driver.find_element(By.CSS_SELECTOR, ".btn.btn-primary.detail_page.apply")
         apply_btn.click()
         time.sleep(2)
 
