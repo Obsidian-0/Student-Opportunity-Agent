@@ -1,6 +1,8 @@
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import time
 
 
@@ -21,15 +23,18 @@ def internshala_login(email, password):
 
     try:
         driver.get("https://internshala.com/login/student")
-        time.sleep(2)
+        wait = WebDriverWait(driver, 15)
 
-        driver.find_element(By.ID, "modal_email").send_keys(email)
+        email_field = wait.until(
+            EC.presence_of_element_located((By.NAME, "email"))
+        )
+        email_field.send_keys(email)
         time.sleep(0.5)
 
-        driver.find_element(By.ID, "modal_password").send_keys(password)
+        driver.find_element(By.NAME, "password").send_keys(password)
         time.sleep(0.5)
 
-        driver.find_element(By.ID, "modal_login_submit").click()
+        driver.find_element(By.CSS_SELECTOR, "button.btn.btn-primary").click()
         time.sleep(3)
 
         if "dashboard" in driver.current_url or "student" in driver.current_url:
@@ -48,7 +53,6 @@ def internshala_login(email, password):
 def apply_with_session(cookies, apply_link):
     driver = get_driver(headless=False)
 
-    
     try:
         driver.get("https://internshala.com")
         time.sleep(1)
@@ -58,7 +62,6 @@ def apply_with_session(cookies, apply_link):
                 driver.add_cookie(cookie)
             except:
                 continue
-        
 
         driver.get(apply_link)
         time.sleep(3)
@@ -70,6 +73,7 @@ def apply_with_session(cookies, apply_link):
         except:
             driver.quit()
             return {"success": False, "message": "Apply button nahi mila"}
+
         try:
             cv_section = driver.find_element(By.CSS_SELECTOR, ".resume_required, [class*='resume']")
             if "not uploaded" in cv_section.text.lower() or "upload" in cv_section.text.lower():
@@ -77,8 +81,6 @@ def apply_with_session(cookies, apply_link):
                 return {"success": False, "message": "Pehle Internshala profile mein CV upload karo"}
         except:
             pass
-
-       
 
         page_text = driver.find_element(By.TAG_NAME, "body").text[:500]
         driver.quit()
