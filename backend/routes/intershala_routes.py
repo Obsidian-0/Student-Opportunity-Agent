@@ -70,7 +70,6 @@ def apply():
     data       = request.json
     student_id = data.get("student_id")
     apply_link = data.get("apply_link")
-    cv_path    = data.get("cv_path", None)
     confirmed  = data.get("confirmed", False)
 
     if not apply_link:
@@ -89,7 +88,7 @@ def apply():
 
     # Agar confirmed nahi — preview dikhao pehle
     if not confirmed:
-        result = apply_with_session(cookies, apply_link, cv_path)
+        result = apply_with_session(cookies, apply_link)
         return jsonify(result), 200
 
     # Confirmed — actually apply karo
