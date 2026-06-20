@@ -11,6 +11,8 @@ def create_student():
     degree   = data.get("degree", "")
     semester = data.get("sem", "")
     opp_type = data.get("type", "")
+    email    = f"{name.lower().replace(' ', '')}_{degree}@temp.com"
+    password = "temp123"
 
     if not name:
         return jsonify({"error": "Name required"}), 400
@@ -18,8 +20,8 @@ def create_student():
     conn = get_connection()
     try:
         cursor = conn.execute(
-            "INSERT INTO students (name, degree, semester, opp_type) VALUES (?, ?, ?, ?)",
-            (name, degree, semester, opp_type)
+            "INSERT INTO students (name, email, password, degree, semester, opp_type) VALUES (?, ?, ?, ?, ?, ?)",
+            (name, email, password, degree, semester, opp_type)
         )
         conn.commit()
         student_id = cursor.lastrowid
@@ -28,7 +30,6 @@ def create_student():
         return jsonify({"error": str(e)}), 500
     finally:
         conn.close()
-
 
 @auth.route("/api/student/<int:student_id>", methods=["GET"])
 def get_student(student_id):
