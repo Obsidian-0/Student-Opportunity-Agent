@@ -379,8 +379,6 @@ function ApplyStep({ profile, onBack }) {
 
   const [current, setCurrent] = useState(0);
   const [sessionValid, setSessionValid] = useState(null);
-  const [loginEmail, setLoginEmail] = useState("");
-  const [loginPassword, setLoginPassword] = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError] = useState(null);
   const [applyLoading, setApplyLoading] = useState(false);
@@ -406,9 +404,8 @@ function ApplyStep({ profile, onBack }) {
     }
   };
 
-  // Internshala login
+  // Internshala login — user khud browser mein login karega
   const handleLogin = async () => {
-    if (!loginEmail.trim() || !loginPassword.trim()) return;
     setLoginLoading(true);
     setLoginError(null);
     try {
@@ -416,8 +413,6 @@ function ApplyStep({ profile, onBack }) {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          email: loginEmail,
-          password: loginPassword,
           student_id: profile.student_id,
         }),
       });
@@ -425,7 +420,7 @@ function ApplyStep({ profile, onBack }) {
       if (data.success) {
         setSessionValid(true);
       } else {
-        setLoginError(data.message || "Login fail ho gaya");
+        setLoginError(data.message || "Login fail ho gaya — dobara try karo");
       }
     } catch {
       setLoginError("Backend se connect nahi ho saka");
@@ -555,58 +550,23 @@ function ApplyStep({ profile, onBack }) {
           Apply karne ke liye pehle Internshala account se login karo.
         </p>
 
-        <div style={{ display: "flex", flexDirection: "column", gap: 14 }}>
-          <div>
-            <label style={{ fontSize: 11, fontWeight: 700, color: C.muted,
-              letterSpacing: "1px", textTransform: "uppercase", display: "block", marginBottom: 6 }}>
-              Email
-            </label>
-            <input
-              type="email"
-              value={loginEmail}
-              onChange={(e) => setLoginEmail(e.target.value)}
-              placeholder="internshala@email.com"
-              style={{ width: "100%", background: C.surface, border: `1px solid ${C.border}`,
-                borderRadius: 10, padding: "12px 16px", color: C.text, fontSize: 14,
-                outline: "none", fontFamily: "inherit", boxSizing: "border-box" }}
-              onFocus={(e) => (e.target.style.border = `1px solid ${C.accent}`)}
-              onBlur={(e) => (e.target.style.border = `1px solid ${C.border}`)}
-            />
-          </div>
-
-          <div>
-            <label style={{ fontSize: 11, fontWeight: 700, color: C.muted,
-              letterSpacing: "1px", textTransform: "uppercase", display: "block", marginBottom: 6 }}>
-              Password
-            </label>
-            <input
-              type="password"
-              value={loginPassword}
-              onChange={(e) => setLoginPassword(e.target.value)}
-              placeholder="••••••••"
-              style={{ width: "100%", background: C.surface, border: `1px solid ${C.border}`,
-                borderRadius: 10, padding: "12px 16px", color: C.text, fontSize: 14,
-                outline: "none", fontFamily: "inherit", boxSizing: "border-box" }}
-              onFocus={(e) => (e.target.style.border = `1px solid ${C.accent}`)}
-              onBlur={(e) => (e.target.style.border = `1px solid ${C.border}`)}
-            />
-          </div>
-        </div>
+       <p style={{ color: C.muted, fontSize: 13, marginBottom: 20, lineHeight: 1.6 }}>
+          Click karne pe ek browser window khulega — wahan apna email/password khud daal kar login karo (CAPTCHA aaye toh woh bhi khud solve karo). Login hote hi yahan automatically agla step khul jayega.
+        </p>
 
         {loginError && (
-          <div style={{ color: C.red, fontSize: 13, marginTop: 12 }}>⚠ {loginError}</div>
+          <div style={{ color: C.red, fontSize: 13, marginBottom: 12 }}>⚠ {loginError}</div>
         )}
 
         <button
           onClick={handleLogin}
-          disabled={loginLoading || !loginEmail.trim() || !loginPassword.trim()}
-          style={{ marginTop: 20, width: "100%", padding: "14px", borderRadius: 12, border: "none",
-            background: !loginLoading && loginEmail && loginPassword
-              ? `linear-gradient(135deg,${C.accent},${C.cyan})` : C.surface,
-            color: !loginLoading && loginEmail && loginPassword ? "#fff" : C.muted,
+          disabled={loginLoading}
+          style={{ width: "100%", padding: "14px", borderRadius: 12, border: "none",
+            background: !loginLoading ? `linear-gradient(135deg,${C.accent},${C.cyan})` : C.surface,
+            color: !loginLoading ? "#fff" : C.muted,
             fontSize: 15, fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
             display: "flex", alignItems: "center", justifyContent: "center", gap: 10 }}>
-          {loginLoading ? <><Spinner /> Logging in...</> : "Login to Internshala →"}
+          {loginLoading ? <><Spinner /> Waiting for login (browser khula hai)...</> : "Open Internshala Login →"}
         </button>
       </div>
     );
