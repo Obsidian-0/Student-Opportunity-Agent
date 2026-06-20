@@ -20,12 +20,11 @@ def score_jobs(jobs: list, student_skills: list) -> list:
         matched_score = 0
 
         for skill in student_skill_names:
+
+            total += 10
             if skill in desc:
                 matched.append(skill)
-                matched_score += student_skill_map.get(skill, 5)
-                total += 10
-            else:
-                total += 10
+                matched_score += 10 
 
         # Match percentage calculate karo
         if total > 0:
