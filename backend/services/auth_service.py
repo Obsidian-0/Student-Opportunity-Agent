@@ -18,7 +18,7 @@ def get_driver(headless=False):
     return driver
 
 
-def internshala_login(email, password):
+def internshala_login():
     driver = get_driver(headless=False)
 
     try:
@@ -28,28 +28,20 @@ def internshala_login(email, password):
             time.sleep(1)
         except:
             pass
-            
-        wait = WebDriverWait(driver, 15)
 
-        email_field = wait.until(
-            EC.presence_of_element_located((By.NAME, "email"))
-        )
-        email_field.send_keys(email)
-        time.sleep(0.5)
-
-        driver.find_element(By.NAME, "password").send_keys(password)
-        time.sleep(0.5)
-
-        driver.find_element(By.CSS_SELECTOR, "button.btn.btn-primary").click()
-        time.sleep(3)
-
-        if "dashboard" in driver.current_url or "student" in driver.current_url:
+        # User ko khud login karne do — yahan kuch fill nahi karna
+        # Sirf wait karo jab tak login na ho jaye
+        wait_long = WebDriverWait(driver, 120)  # 2 minute time do user ko
+        try:
+            wait_long.until(
+                lambda d: "dashboard" in d.current_url or "student" in d.current_url
+            )
             cookies = driver.get_cookies()
             driver.quit()
             return {"success": True, "cookies": cookies}
-        else:
+        except:
             driver.quit()
-            return {"success": False, "message": "Login failed — check email/password"}
+            return {"success": False, "message": "Login time out — dobara try karo"}
 
     except Exception as e:
         driver.quit()
