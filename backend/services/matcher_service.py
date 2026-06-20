@@ -29,8 +29,8 @@ def score_jobs(jobs: list, student_skills: list) -> list:
         # Match percentage calculate karo
         if total > 0:
             raw_pct = int((matched_score / total) * 100)
-            # 40-95 range mein rakh
-            match_pct = max(40, min(95, raw_pct + 30))
+            # 5-95 range mein rakh
+            match_pct = max(5, min(95, raw_pct))
         else:
             match_pct = 50
 
