@@ -19,4 +19,4 @@ with app.app_context():
     init_db()
 
 if __name__ == "__main__":
-    app.run(debug=True, port=5000)
+    app.run(debug=True,threaded=True, port=5000)
