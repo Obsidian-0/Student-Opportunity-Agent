@@ -34,7 +34,7 @@ def internshala_login(student_id=None):
         wait_long = WebDriverWait(driver, 120)
         try:
             wait_long.until(
-                lambda d: "dashboard" in d.current_url or "/student" in d.current_url
+                lambda d: "/student/dashboard" in d.current_url
             )
             cookies = driver.get_cookies()
             driver.quit()
