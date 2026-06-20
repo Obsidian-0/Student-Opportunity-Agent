@@ -23,6 +23,12 @@ def internshala_login(email, password):
 
     try:
         driver.get("https://internshala.com/login/student")
+        try:
+            driver.find_element(By.ID, "close_popup").click()
+            time.sleep(1)
+        except:
+            pass
+            
         wait = WebDriverWait(driver, 15)
 
         email_field = wait.until(
@@ -65,6 +71,11 @@ def apply_with_session(cookies, apply_link):
 
         driver.get(apply_link)
         time.sleep(3)
+        try:
+            driver.find_element(By.ID, "close_popup").click()
+            time.sleep(1)
+        except:
+            pass
 
         try:
             apply_btn = driver.find_element(By.CSS_SELECTOR, ".btn.btn-primary.detail_page.apply")
@@ -111,7 +122,11 @@ def confirm_apply(cookies, apply_link):
 
         driver.get(apply_link)
         time.sleep(3)
-
+        try:
+            driver.find_element(By.ID, "close_popup").click()
+            time.sleep(1)
+        except:
+            pass
         # Step 1 — Apply now click
         apply_btn = driver.find_element(By.CSS_SELECTOR, ".btn.btn-primary.detail_page.apply")
         apply_btn.click()

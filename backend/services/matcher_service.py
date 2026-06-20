@@ -11,7 +11,8 @@ def score_jobs(jobs: list, student_skills: list) -> list:
 
     scored = []
     for job in jobs:
-        desc = (job.get("title","") + " " + job.get("description","")).lower()
+        
+        desc = (job.get("title","") + " " + job.get("description","") + " " + job.get("skills_needed","")).lower()
 
         matched  = []
         missing  = []
