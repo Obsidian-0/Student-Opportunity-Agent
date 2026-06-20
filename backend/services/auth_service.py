@@ -18,7 +18,7 @@ def get_driver(headless=False):
     return driver
 
 
-def internshala_login():
+def internshala_login(student_id=None):
     driver = get_driver(headless=False)
 
     try:
@@ -29,19 +29,19 @@ def internshala_login():
         except:
             pass
 
-        # User ko khud login karne do — yahan kuch fill nahi karna
-        # Sirf wait karo jab tak login na ho jaye
-        wait_long = WebDriverWait(driver, 120)  # 2 minute time do user ko
+        # User khud login karega — yahan kuch fill nahi karna
+        # 2 minute wait karo jab tak login na ho jaye
+        wait_long = WebDriverWait(driver, 120)
         try:
             wait_long.until(
-                lambda d: "dashboard" in d.current_url or "student" in d.current_url
+                lambda d: "dashboard" in d.current_url or "/student" in d.current_url
             )
             cookies = driver.get_cookies()
             driver.quit()
             return {"success": True, "cookies": cookies}
         except:
             driver.quit()
-            return {"success": False, "message": "Login time out — dobara try karo"}
+            return {"success": False, "message": "Login time out ho gaya — dobara try karo"}
 
     except Exception as e:
         driver.quit()
