@@ -39,14 +39,9 @@ def check_session_valid(cookies):
 @internshala_bp.route("/api/internshala/login", methods=["POST"])
 def login():
     data       = request.json
-    email      = data.get("email")
-    password   = data.get("password")
     student_id = data.get("student_id")
 
-    if not email or not password:
-        return jsonify({"error": "Email aur password dono chahiye"}), 400
-
-    result = internshala_login(email, password)
+    result = internshala_login()
 
     if result["success"]:
         save_cookies(student_id, result["cookies"])
