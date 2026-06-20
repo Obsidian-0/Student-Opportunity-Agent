@@ -112,12 +112,23 @@ def confirm_apply(cookies, apply_link):
         driver.get(apply_link)
         time.sleep(3)
 
+        # Step 1 — Apply now click
         apply_btn = driver.find_element(By.CSS_SELECTOR, ".btn.btn-primary.detail_page.apply")
         apply_btn.click()
         time.sleep(2)
 
+        # Step 2 — Proceed to application click
         try:
-            submit_btn = driver.find_element(By.CSS_SELECTOR, "[type='submit'], .submit_button, #submit")
+            proceed_btn = driver.find_element(By.CSS_SELECTOR, ".proceed-btn")
+            proceed_btn.click()
+            time.sleep(2)
+        except:
+            driver.quit()
+            return {"success": False, "message": "Proceed button nahi mila"}
+
+        # Step 3 — Final submit
+        try:
+            submit_btn = driver.find_element(By.CSS_SELECTOR, "#submit")
             submit_btn.click()
             time.sleep(2)
             driver.quit()
