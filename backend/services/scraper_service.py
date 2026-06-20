@@ -35,22 +35,30 @@ def get_jobs(skills, opp_type="internship"):
             driver.quit()
             return []
 
+    # Sign-in popup band karo agar aaya ho
+    try:
+        close_btn = driver.find_element(By.ID, "close_popup")
+        close_btn.click()
+        time.sleep(1)
+    except:
+        pass
+
     cards = driver.find_elements(By.CSS_SELECTOR, ".individual_internship")
     jobs = []
 
     for i, card in enumerate(cards[:8]):
         try:
-            title = card.find_element(By.CSS_SELECTOR, ".profile").text.strip()
+            title = card.find_element(By.CSS_SELECTOR, ".job-title-href").text.strip()
         except:
             title = "Internship"
 
         try:
-            company = card.find_element(By.CSS_SELECTOR, ".company_name").text.strip()
+            company = card.find_element(By.CSS_SELECTOR, ".company-name").text.strip()
         except:
             company = "Company"
 
         try:
-            location = card.find_element(By.CSS_SELECTOR, "#location_names span").text.strip()
+            location = card.find_element(By.CSS_SELECTOR, ".row-1-item.locations span").text.strip()
         except:
             location = "Remote"
 
@@ -60,22 +68,26 @@ def get_jobs(skills, opp_type="internship"):
             stipend = "See listing"
 
         try:
-            duration = card.find_element(By.CSS_SELECTOR, ".other_detail_item .item_body").text.strip()
+            duration = card.find_element(By.CSS_SELECTOR, ".row-1-item i.ic-16-calendar").find_element(By.XPATH, "..").text.strip()
         except:
             duration = ""
 
         try:
-            skills_els = card.find_elements(By.CSS_SELECTOR, ".round_tabs")
-            required_skills = ", ".join([s.text.strip() for s in skills_els]) if skills_els else ""
+          skill_els = card.find_elements(By.CSS_SELECTOR, ".job_skill")
+          required_skills = ", ".join([s.text.strip() for s in skill_els]) if skill_els else ""
         except:
-            required_skills = ""
+          required_skills = ""
 
         try:
-            apply_a = card.find_element(By.CSS_SELECTOR, "a.top_apply_now_cta, a.apply_now_button")
-            href = apply_a.get_attribute("href")
+            link_el = card.find_element(By.CSS_SELECTOR, ".job-title-href")
+            href = link_el.get_attribute("href")
             apply_link = href if href.startswith("http") else "https://internshala.com" + href
         except:
-            apply_link = "https://internshala.com/internships"
+            try:
+                href = card.get_attribute("data-href")
+                apply_link = "https://internshala.com" + href if href else "https://internshala.com/internships"
+            except:
+                apply_link = "https://internshala.com/internships"
 
         try:
             posted = card.find_element(By.CSS_SELECTOR, ".status-success").text.strip()
@@ -93,7 +105,7 @@ def get_jobs(skills, opp_type="internship"):
             "duration":       duration,
             "posted":         posted,
             "apply_link":     apply_link,
-            "description":    f"{title} at {company} — {location}",
+            "description": f"{title} at {company} — {location}. Skills: {required_skills}",
             "skills_needed":  required_skills,
         })
 
