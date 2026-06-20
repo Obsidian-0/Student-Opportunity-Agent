@@ -30,18 +30,9 @@ def get_cookies(student_id):
 
 
 def check_session_valid(cookies):
-    if not cookies:
+    if not cookies or len(cookies) == 0:
         return False
-    # Cookies mein expiry check karo
-    for cookie in cookies:
-        if cookie.get("name") == "internshala_session":
-            expiry = cookie.get("expiry", 0)
-            if expiry:
-                import time
-                if time.time() > expiry:
-                    return False
-            return True
-    return False
+    return True
 
 
 # ── Login ──────────────────────────────────────────────────────

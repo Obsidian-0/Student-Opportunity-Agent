@@ -398,7 +398,7 @@ function ApplyStep({ profile, onBack }) {
 
   const checkSession = async () => {
     try {
-      const res = await fetch(`${BASE}/api/internshala/session?student_id=1`);
+      const res = await fetch(`${BASE}/api/internshala/session?student_id=${profile.student_id}`);
       const data = await res.json();
       setSessionValid(data.logged_in);
     } catch {
