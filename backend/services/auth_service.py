@@ -144,6 +144,9 @@ def confirm_apply(cookies, apply_link):
             driver.quit()
             return {"success": False, "message": "Submit button nahi mila"}
 
-    except Exception as e:
-        driver.quit()
-        return {"success": False, "message": str(e)}
+    # except Exception as e:
+    #     driver.quit()
+    #     return {"success": False, "message": str(e)}
+    
+
+
