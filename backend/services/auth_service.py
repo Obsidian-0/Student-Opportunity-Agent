@@ -147,3 +147,6 @@ def confirm_apply(cookies, apply_link):
     except Exception as e:
         driver.quit()
         return {"success": False, "message": str(e)}
+    
+
+
