@@ -16,9 +16,9 @@ AI-powered platform to find and auto-apply to internships & scholarships worldwi
 
 ## Tech Stack
 
-| Backend | Frontend | Database | AI |
+| Backend | Frontend | Database |  |
 |---------|----------|----------|-----|
-| Node.js | React 18 | MongoDB | TinyFish AI |
+| Node.js | React 18 | MongoDB |  |
 | Express | Material-UI | Atlas | Browser Automation |
 | JWT Auth | Axios | | |
 
@@ -47,7 +47,7 @@ Create `backend/.env`:
 PORT=5000
 MONGODB_URI=mongodb+srv://your_connection_string
 JWT_SECRET=your_secret_key
-TINYFISH_API_KEY=sk-tinyfish-your_key
+
 RAPIDAPI_KEY=your_rapidapi_key (optional)
 ```
 
@@ -85,7 +85,7 @@ GET /api/jobs/scholarships?country=UK             - Get scholarships
 ```
 POST /api/agent/linkedin   - Auto-apply via LinkedIn
 POST /api/agent/indeed     - Auto-apply via Indeed
-GET  /api/agent/test-connection - Test TinyFish API
+
 ```
 
 ## Project Structure
@@ -109,10 +109,7 @@ student-opportunity-agent/
 
 ## Getting API Keys
 
-### TinyFish AI (Required for Auto-Apply)
-1. Go to [agent.tinyfish.ai](https://agent.tinyfish.ai)
-2. Sign up and get API key
-3. Add to `.env`: `TINYFISH_API_KEY=sk-tinyfish-xxxxx`
+
 
 ### RapidAPI (Optional - Live Job Search)
 1. Go to [rapidapi.com/jsearch](https://rapidapi.com/letscrape-6bRBa3QguO5/api/jsearch)
@@ -184,6 +181,6 @@ MIT License - see [LICENSE](LICENSE)
 ## Contact
 
 - GitHub: [@zagota249](https://github.com/zagota249)
-- 
+- GitGub:[@Obsidian-0](https://github.com/Obsidian-0)
 
----
+
